@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.AnimatedValues;
 using UnityEngine;
 
 public class Module
@@ -16,11 +17,11 @@ public class Module
     }
 
     public GameObject moduleGameObject;
+    public float rotation = 0;
 
     public List<Vector3> pXFaceVertPos, nXFaceVertPos,
     pYFaceVertPos, nYFaceVertPos,
     pZFaceVertPos, nZFaceVertPos;
-
 
     public List<Module> pXFaceModules, nXFaceModules,
     pZFaceModules, nZFaceModules,
@@ -32,6 +33,7 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
 {
     public List<GameObject> moduleObjects;
     List<Module> modules = new List<Module>();
+    public GameObject blank;
 
     void Start()
     {
@@ -39,16 +41,51 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
         {
             Module newModule = new Module();
             newModule.moduleGameObject = modObj;
-            DetermineVertexPositionsOfEachFace(newModule, modObj.GetComponent<MeshFilter>().sharedMesh);
+            if (modObj.GetComponent<MeshFilter>().sharedMesh != null)
+                DetermineVertexPositionsOfEachFace(newModule, modObj.GetComponent<MeshFilter>().sharedMesh);
             modules.Add(newModule);
+
+
+            Mesh newMesh = new Mesh();
+            Mesh oldMesh = modObj.GetComponent<MeshFilter>().sharedMesh;
+            Vector3[] verts = new Vector3[oldMesh.vertices.Length];
+            //newMesh.vertices = oldMesh.vertices;
+
+            Quaternion angle = Quaternion.Euler(new Vector3(0,90,0));
+            for (int i = 0; i < verts.Length; i++)
+            {
+                verts[i] = angle * oldMesh.vertices[i];
+            }
+
+            newMesh.vertices = verts;
+            newMesh.triangles = oldMesh.triangles;
+            newMesh.normals = oldMesh.normals;
+            newMesh.tangents = oldMesh.tangents;
+            newMesh.bounds = oldMesh.bounds;
+            newMesh.uv = oldMesh.uv;
+
+            GameObject newObj = new GameObject();
+            newObj.AddComponent<MeshFilter>();
+            newObj.AddComponent<MeshRenderer>();
+            newObj.GetComponent<MeshFilter>().mesh = newMesh;
+            newObj.GetComponent<MeshRenderer>().material = newModule.moduleGameObject.GetComponent<MeshRenderer>().sharedMaterial;
+
+            Module mod = new Module();
+            mod.moduleGameObject = newObj;
+            if (newObj.GetComponent<MeshFilter>().mesh != null)
+                DetermineVertexPositionsOfEachFace(mod, newObj.GetComponent<MeshFilter>().mesh);
+            modules.Add(mod);
         }
+        Module blankModule = new Module();
+        blankModule.moduleGameObject = blank;
+        modules.Add(blankModule);
 
         foreach (Module mod in modules)
         {
             DeterminePossibleAdjacentModules();
         }
-        //PrintVertexPositions(modules[6]);
-        PrintAllAdjacentTiles(modules[6]);
+        PrintVertexPositions(modules[1]);
+        //PrintAllAdjacentTiles(modules[1]);
         //Debug.Log(modules[2].pXFaceModules[0].moduleGameObject.name);
     }
 
@@ -90,41 +127,63 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
             {
                 if (AreListsEqual(mod.pXFaceVertPos, MultiplyVectorList(adjMod.nXFaceVertPos, new Vector3(-1, 1, 1))))
                 {
-                    if (!mod.pXFaceModules.Contains(adjMod))
+                    if (mod.pXFaceVertPos.Count == 0 && !mod.pXFaceModules.Contains(modules[modules.Count - 1]))
+                        mod.pXFaceModules.Add(modules[modules.Count - 1]);
+                    if (mod.pXFaceVertPos.Count != 0 && !mod.pXFaceModules.Contains(adjMod))
                         mod.pXFaceModules.Add(adjMod);
                 }
 
                 if (AreListsEqual(mod.nXFaceVertPos, MultiplyVectorList(adjMod.pXFaceVertPos, new Vector3(-1, 1, 1))))
                 {
-                    if (!mod.nXFaceModules.Contains(adjMod))
+                    if (mod.nXFaceVertPos.Count == 0 && !mod.nXFaceModules.Contains(modules[modules.Count - 1]))
+                        mod.nXFaceModules.Add(modules[modules.Count - 1]);
+                    if (mod.nXFaceVertPos.Count != 0 && !mod.nXFaceModules.Contains(adjMod))
                         mod.nXFaceModules.Add(adjMod);
                 }
 
                 if (AreListsEqual(mod.pYFaceVertPos, MultiplyVectorList(adjMod.nYFaceVertPos, new Vector3(1, -1, 1))))
                 {
-                    if (!mod.pYFaceModules.Contains(adjMod))
+                    if (mod.pYFaceVertPos.Count == 0 && !mod.pYFaceModules.Contains(modules[modules.Count - 1]))
+                        mod.pYFaceModules.Add(modules[modules.Count - 1]);
+                    if (mod.pYFaceVertPos.Count != 0 && !mod.pYFaceModules.Contains(adjMod))
                         mod.pYFaceModules.Add(adjMod);
                 }
 
                 if (AreListsEqual(mod.nYFaceVertPos, MultiplyVectorList(adjMod.pYFaceVertPos, new Vector3(1, -1, 1))))
                 {
-                    if (!mod.nYFaceModules.Contains(adjMod))
+                    if (mod.nYFaceVertPos.Count == 0 && !mod.nYFaceModules.Contains(modules[modules.Count - 1]))
+                        mod.nYFaceModules.Add(modules[modules.Count - 1]);
+                    if (mod.nYFaceVertPos.Count != 0 && !mod.nYFaceModules.Contains(adjMod))
                         mod.nYFaceModules.Add(adjMod);
                 }
 
                 if (AreListsEqual(mod.pZFaceVertPos, MultiplyVectorList(adjMod.nZFaceVertPos, new Vector3(1, 1, -1))))
                 {
-                    if (!mod.pZFaceModules.Contains(adjMod))
+                    if (mod.pZFaceVertPos.Count == 0 && !mod.pZFaceModules.Contains(modules[modules.Count - 1]))
+                        mod.pZFaceModules.Add(modules[modules.Count - 1]);
+                    if (mod.pZFaceVertPos.Count != 0 && !mod.pZFaceModules.Contains(adjMod))
                         mod.pZFaceModules.Add(adjMod);
                 }
 
                 if (AreListsEqual(mod.nZFaceVertPos, MultiplyVectorList(adjMod.pZFaceVertPos, new Vector3(1, 1, -1))))
                 {
-                    if (!mod.nZFaceModules.Contains(adjMod))
+                    if (mod.nZFaceVertPos.Count == 0 && !mod.nZFaceModules.Contains(modules[modules.Count - 1]))
+                        mod.nZFaceModules.Add(modules[modules.Count - 1]);
+                    if (mod.nZFaceVertPos.Count != 0 && !mod.nZFaceModules.Contains(adjMod))
                         mod.nZFaceModules.Add(adjMod);
                 }
             }
         }
+    }
+
+    bool DoesModuleHaveRotationalSymmetry(Module module)
+    {
+        return true;
+    }
+
+    Module RotateModuleVertices(Module module, float rotationAmount)
+    {
+        return new Module();
     }
 
     List<Vector3> MultiplyVectorList(List<Vector3> list, Vector3 vector)
@@ -139,7 +198,7 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
 
     bool AreListsEqual(List<Vector3> list1, List<Vector3> list2)
     {
-        if (list1.Count != list2.Count || list1.Count == 0)
+        if (list1.Count != list2.Count)
             return false;
 
         List<Vector3> newList = new List<Vector3>();
@@ -174,6 +233,7 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
 
     void PrintVertexPositions(Module module)
     {
+        Debug.Log(module.moduleGameObject.name + " " + module.rotation);
         Debug.Log("--------------- pXFaceVertPos ---------------");
         foreach (Vector3 pos in module.pXFaceVertPos)
         {
@@ -213,6 +273,7 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
 
     void PrintAllAdjacentTiles(Module module)
     {
+        Debug.Log(module.moduleGameObject.name + " " + module.rotation);
         Debug.Log("--------------- pX Face ---------------");
         foreach (Module mod in module.pXFaceModules)
         {
