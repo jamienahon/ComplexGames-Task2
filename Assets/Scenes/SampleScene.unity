@@ -616,8 +616,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moduleObjects:
-  - {fileID: 919132149155446097, guid: aafa213ef0cdbe94fa70a99b9071c6b5, type: 3}
-  blank: {fileID: 7871133820552753701, guid: 42ef05ab36e01984786429d0279abfb8, type: 3}
+  - {fileID: 919132149155446097, guid: be95dab439fd2174a84eeb563a10f464, type: 3}
+  modulePrefab: {fileID: 7871133820552753701, guid: 42ef05ab36e01984786429d0279abfb8, type: 3}
 --- !u!4 &1408893898
 Transform:
   m_ObjectHideFlags: 0
