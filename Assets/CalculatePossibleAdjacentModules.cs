@@ -85,12 +85,16 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
         blankModule.moduleObject = modulePrefab;
         modules.Add(blankModule);
 
-        foreach (Module mod in modules)
+        DeterminePossibleAdjacentModules();
+
+        WaveFunctionCollapseAlgorithm algorithm = GetComponent<WaveFunctionCollapseAlgorithm>();
+        foreach(Module mod in modules)
         {
-            DeterminePossibleAdjacentModules();
+            algorithm.modules.Add(mod);
         }
+
         //PrintVertexPositions(modules[1]);
-        PrintAllAdjacentTiles(modules[0]);
+        PrintAllAdjacentTiles(modules[25]);
         //Debug.Log(modules[2].pXFaceModules[0].moduleGameObject.name);
         //PrintModuleList();
         //PrintNormals(modules[0]);
@@ -182,6 +186,8 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
                         if (mod.pXFaceVertPos.Count != 0 && !mod.pXFaceModules.Contains(adjMod))
                             mod.pXFaceModules.Add(adjMod);
                     }
+                    if(mod.mesh == null && adjMod.nXFaceVertPos.Count == 0 && !mod.pXFaceModules.Contains(adjMod))
+                        mod.pXFaceModules.Add(adjMod);
                 }
 
                 if (DoListsContainSameData(mod.nXFaceVertPos, MultiplyVectorList(adjMod.pXFaceVertPos, new Vector3(-1, 1, 1))))
@@ -193,6 +199,8 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
                         if (mod.nXFaceVertPos.Count != 0 && !mod.nXFaceModules.Contains(adjMod))
                             mod.nXFaceModules.Add(adjMod);
                     }
+                    if (mod.mesh == null && adjMod.pXFaceVertPos.Count == 0 && !mod.nXFaceModules.Contains(adjMod))
+                        mod.nXFaceModules.Add(adjMod);
                 }
 
                 if (DoListsContainSameData(mod.pYFaceVertPos, MultiplyVectorList(adjMod.nYFaceVertPos, new Vector3(1, -1, 1))))
@@ -204,6 +212,8 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
                         if (mod.pYFaceVertPos.Count != 0 && !mod.pYFaceModules.Contains(adjMod))
                             mod.pYFaceModules.Add(adjMod);
                     }
+                    if (mod.mesh == null && adjMod.nYFaceVertPos.Count == 0 && !mod.pYFaceModules.Contains(adjMod))
+                        mod.pYFaceModules.Add(adjMod);
                 }
 
                 if (DoListsContainSameData(mod.nYFaceVertPos, MultiplyVectorList(adjMod.pYFaceVertPos, new Vector3(1, -1, 1))))
@@ -215,6 +225,8 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
                         if (mod.nYFaceVertPos.Count != 0 && !mod.nYFaceModules.Contains(adjMod))
                             mod.nYFaceModules.Add(adjMod);
                     }
+                    if (mod.mesh == null && adjMod.pYFaceVertPos.Count == 0 && !mod.nYFaceModules.Contains(adjMod))
+                        mod.nYFaceModules.Add(adjMod);
                 }
 
                 if (DoListsContainSameData(mod.pZFaceVertPos, MultiplyVectorList(adjMod.nZFaceVertPos, new Vector3(1, 1, -1))))
@@ -226,6 +238,8 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
                         if (mod.pZFaceVertPos.Count != 0 && !mod.pZFaceModules.Contains(adjMod))
                             mod.pZFaceModules.Add(adjMod);
                     }
+                    if (mod.mesh == null && adjMod.nZFaceVertPos.Count == 0 && !mod.pZFaceModules.Contains(adjMod))
+                        mod.pZFaceModules.Add(adjMod);
                 }
 
                 if (DoListsContainSameData(mod.nZFaceVertPos, MultiplyVectorList(adjMod.pZFaceVertPos, new Vector3(1, 1, -1))))
@@ -237,6 +251,8 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
                         if (mod.nZFaceVertPos.Count != 0 && !mod.nZFaceModules.Contains(adjMod))
                             mod.nZFaceModules.Add(adjMod);
                     }
+                    if (mod.mesh == null && adjMod.pZFaceVertPos.Count == 0 && !mod.nZFaceModules.Contains(adjMod))
+                        mod.nZFaceModules.Add(adjMod);
                 }
             }
         }
