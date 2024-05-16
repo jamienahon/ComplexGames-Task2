@@ -1,7 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
-using UnityEditor.AnimatedValues;
 using UnityEngine;
 
 public class Module
@@ -60,14 +57,15 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
             DetermineNormalsOfEachFace(newModule, modObjMesh);
             modules.Add(newModule);
 
-            if (!DoesModuleHaveRotationalSymmetry(newModule))
+            if (!DoListsContainSameData(ConvertArrToList(modObjMesh.vertices),
+            ConvertArrToList(RotateArrayOfVector3(modObjMesh.vertices, 90))))
             {
                 for (int i = 90; i < 360; i += 90)
                 {
                     Mesh newMesh = new Mesh();
-                    newMesh.vertices = RotateModuleVertices(modObjMesh.vertices, i);
+                    newMesh.vertices = RotateArrayOfVector3(modObjMesh.vertices, i);
                     newMesh.triangles = modObjMesh.triangles;
-                    newMesh.normals = RotateModuleNormals(modObjMesh.normals, i);
+                    newMesh.normals = RotateArrayOfVector3(modObjMesh.normals, i);
                     newMesh.tangents = modObjMesh.tangents;
                     newMesh.bounds = modObjMesh.bounds;
                     newMesh.uv = modObjMesh.uv;
@@ -95,7 +93,7 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
         PrintAllAdjacentTiles(modules[0]);
         //Debug.Log(modules[2].pXFaceModules[0].moduleGameObject.name);
         //PrintModuleList();
-        //PrintNormals(modules[1]);
+        //PrintNormals(modules[0]);
         //foreach (Vector3 norm in modules[3].mesh.normals)
         //{
         //    Debug.Log(norm);
@@ -142,30 +140,30 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
     void DetermineNormalsOfEachFace(Module module, Mesh moduleMesh)
     {
         List<Vector3> normals = new List<Vector3>();
-        foreach (Vector3 norms in moduleMesh.normals)
+        foreach (Vector3 norm in moduleMesh.normals)
         {
-            normals.Add(norms);
+            normals.Add(norm);
         }
 
-        foreach (Vector3 norms in normals)
+        foreach (Vector3 norm in normals)
         {
-            if (norms.x == 1 && norms.y == 0 && norms.z == 0 && !module.pXFaceNorms.Contains(norms))
-                module.pXFaceNorms.Add(norms);
+            if (norm.x == 1f && !module.pXFaceNorms.Contains(norm))
+                module.pXFaceNorms.Add(norm);
 
-            if (norms.x == -1 && norms.y == 0 && norms.z == 0 && !module.nXFaceNorms.Contains(norms))
-                module.nXFaceNorms.Add(norms);
+            if (norm.x == -1f && !module.nXFaceNorms.Contains(norm))
+                module.nXFaceNorms.Add(norm);
 
-            if (norms.x == 0 && norms.y == 1 && norms.z == 0 && !module.pYFaceNorms.Contains(norms))
-                module.pYFaceNorms.Add(norms);
+            if (norm.y == 1f && !module.pYFaceNorms.Contains(norm))
+                module.pYFaceNorms.Add(norm);
 
-            if (norms.x == 0 && norms.y == -1 && norms.z == 0 && !module.nYFaceNorms.Contains(norms))
-                module.nYFaceNorms.Add(norms);
+            if (norm.y == -1f && !module.nYFaceNorms.Contains(norm))
+                module.nYFaceNorms.Add(norm);
 
-            if (norms.x == 0 && norms.y == 0 && norms.z == 1 && !module.pZFaceNorms.Contains(norms))
-                module.pZFaceNorms.Add(norms);
+            if (norm.z == 1f && !module.pZFaceNorms.Contains(norm))
+                module.pZFaceNorms.Add(norm);
 
-            if (norms.x == 0 && norms.y == 0 && norms.z == -1 && !module.nZFaceNorms.Contains(norms))
-                module.nZFaceNorms.Add(norms);
+            if (norm.z == -1f && !module.nZFaceNorms.Contains(norm))
+                module.nZFaceNorms.Add(norm);
         }
     }
 
@@ -175,52 +173,67 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
         {
             foreach (Module adjMod in modules)
             {
-                if (DoModulesShareNormals(mod, adjMod))
+                if (DoListsContainSameData(mod.pXFaceVertPos, MultiplyVectorList(adjMod.nXFaceVertPos, new Vector3(-1, 1, 1))))
                 {
-                    if (DoListsContainSameData(mod.pXFaceVertPos, MultiplyVectorList(adjMod.nXFaceVertPos, new Vector3(-1, 1, 1))))
+                    if (mod.pXFaceVertPos.Count == 0 && !mod.pXFaceModules.Contains(modules[modules.Count - 1]))
+                        mod.pXFaceModules.Add(modules[modules.Count - 1]);
+                    if (mod.pYFaceNorms.Count > 0 || DoListsContainSameData(mod.nZFaceNorms, adjMod.nZFaceNorms))
                     {
-                        if (mod.pXFaceVertPos.Count == 0 && !mod.pXFaceModules.Contains(modules[modules.Count - 1]))
-                            mod.pXFaceModules.Add(modules[modules.Count - 1]);
                         if (mod.pXFaceVertPos.Count != 0 && !mod.pXFaceModules.Contains(adjMod))
                             mod.pXFaceModules.Add(adjMod);
                     }
+                }
 
-                    if (DoListsContainSameData(mod.nXFaceVertPos, MultiplyVectorList(adjMod.pXFaceVertPos, new Vector3(-1, 1, 1))))
+                if (DoListsContainSameData(mod.nXFaceVertPos, MultiplyVectorList(adjMod.pXFaceVertPos, new Vector3(-1, 1, 1))))
+                {
+                    if (mod.nXFaceVertPos.Count == 0 && !mod.nXFaceModules.Contains(modules[modules.Count - 1]))
+                        mod.nXFaceModules.Add(modules[modules.Count - 1]);
+                    if (mod.pYFaceNorms.Count > 0 || DoListsContainSameData(mod.nZFaceNorms, adjMod.nZFaceNorms))
                     {
-                        if (mod.nXFaceVertPos.Count == 0 && !mod.nXFaceModules.Contains(modules[modules.Count - 1]))
-                            mod.nXFaceModules.Add(modules[modules.Count - 1]);
                         if (mod.nXFaceVertPos.Count != 0 && !mod.nXFaceModules.Contains(adjMod))
                             mod.nXFaceModules.Add(adjMod);
                     }
+                }
 
-                    if (DoListsContainSameData(mod.pYFaceVertPos, MultiplyVectorList(adjMod.nYFaceVertPos, new Vector3(1, -1, 1))))
+                if (DoListsContainSameData(mod.pYFaceVertPos, MultiplyVectorList(adjMod.nYFaceVertPos, new Vector3(1, -1, 1))))
+                {
+                    if (mod.pYFaceVertPos.Count == 0 && !mod.pYFaceModules.Contains(modules[modules.Count - 1]))
+                        mod.pYFaceModules.Add(modules[modules.Count - 1]);
+                    if (DoListsContainSameData(mod.nXFaceNorms, adjMod.nXFaceNorms) && DoListsContainSameData(mod.nZFaceNorms, adjMod.nZFaceNorms))
                     {
-                        if (mod.pYFaceVertPos.Count == 0 && !mod.pYFaceModules.Contains(modules[modules.Count - 1]))
-                            mod.pYFaceModules.Add(modules[modules.Count - 1]);
                         if (mod.pYFaceVertPos.Count != 0 && !mod.pYFaceModules.Contains(adjMod))
                             mod.pYFaceModules.Add(adjMod);
                     }
+                }
 
-                    if (DoListsContainSameData(mod.nYFaceVertPos, MultiplyVectorList(adjMod.pYFaceVertPos, new Vector3(1, -1, 1))))
+                if (DoListsContainSameData(mod.nYFaceVertPos, MultiplyVectorList(adjMod.pYFaceVertPos, new Vector3(1, -1, 1))))
+                {
+                    if (mod.nYFaceVertPos.Count == 0 && !mod.nYFaceModules.Contains(modules[modules.Count - 1]))
+                        mod.nYFaceModules.Add(modules[modules.Count - 1]);
+                    if (DoListsContainSameData(mod.nXFaceNorms, adjMod.nXFaceNorms) && DoListsContainSameData(mod.nZFaceNorms, adjMod.nZFaceNorms))
                     {
-                        if (mod.nYFaceVertPos.Count == 0 && !mod.nYFaceModules.Contains(modules[modules.Count - 1]))
-                            mod.nYFaceModules.Add(modules[modules.Count - 1]);
                         if (mod.nYFaceVertPos.Count != 0 && !mod.nYFaceModules.Contains(adjMod))
                             mod.nYFaceModules.Add(adjMod);
                     }
+                }
 
-                    if (DoListsContainSameData(mod.pZFaceVertPos, MultiplyVectorList(adjMod.nZFaceVertPos, new Vector3(1, 1, -1))))
+                if (DoListsContainSameData(mod.pZFaceVertPos, MultiplyVectorList(adjMod.nZFaceVertPos, new Vector3(1, 1, -1))))
+                {
+                    if (mod.pZFaceVertPos.Count == 0 && !mod.pZFaceModules.Contains(modules[modules.Count - 1]))
+                        mod.pZFaceModules.Add(modules[modules.Count - 1]);
+                    if (mod.pYFaceNorms.Count > 0 || DoListsContainSameData(mod.nXFaceNorms, adjMod.nXFaceNorms))
                     {
-                        if (mod.pZFaceVertPos.Count == 0 && !mod.pZFaceModules.Contains(modules[modules.Count - 1]))
-                            mod.pZFaceModules.Add(modules[modules.Count - 1]);
                         if (mod.pZFaceVertPos.Count != 0 && !mod.pZFaceModules.Contains(adjMod))
                             mod.pZFaceModules.Add(adjMod);
                     }
+                }
 
-                    if (DoListsContainSameData(mod.nZFaceVertPos, MultiplyVectorList(adjMod.pZFaceVertPos, new Vector3(1, 1, -1))))
+                if (DoListsContainSameData(mod.nZFaceVertPos, MultiplyVectorList(adjMod.pZFaceVertPos, new Vector3(1, 1, -1))))
+                {
+                    if (mod.nZFaceVertPos.Count == 0 && !mod.nZFaceModules.Contains(modules[modules.Count - 1]))
+                        mod.nZFaceModules.Add(modules[modules.Count - 1]);
+                    if (mod.pYFaceNorms.Count > 0 || DoListsContainSameData(mod.nXFaceNorms, adjMod.nXFaceNorms))
                     {
-                        if (mod.nZFaceVertPos.Count == 0 && !mod.nZFaceModules.Contains(modules[modules.Count - 1]))
-                            mod.nZFaceModules.Add(modules[modules.Count - 1]);
                         if (mod.nZFaceVertPos.Count != 0 && !mod.nZFaceModules.Contains(adjMod))
                             mod.nZFaceModules.Add(adjMod);
                     }
@@ -229,55 +242,25 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
         }
     }
 
-    bool DoModulesShareNormals(Module mod1, Module mod2)
+    Vector3[] RotateArrayOfVector3(Vector3[] vertices, float rotationAmount)
     {
-        if (DoListsContainSameData(mod1.pXFaceNorms, mod2.pXFaceNorms) && mod1.pXFaceNorms.Count != 0)
-            return true;
-        else if (DoListsContainSameData(mod1.nXFaceNorms, mod2.nXFaceNorms) && mod1.nXFaceNorms.Count != 0)
-            return true;
-        else if (DoListsContainSameData(mod1.pYFaceNorms, mod2.pYFaceNorms) && mod1.pYFaceNorms.Count != 0)
-            return true;
-        else if (DoListsContainSameData(mod1.nYFaceNorms, mod2.nYFaceNorms) && mod1.nYFaceNorms.Count != 0)
-            return true;
-        else if (DoListsContainSameData(mod1.pZFaceNorms, mod2.pZFaceNorms) && mod1.pZFaceNorms.Count != 0)
-            return true;
-        else if (DoListsContainSameData(mod1.nZFaceNorms, mod2.nZFaceNorms) && mod1.nZFaceNorms.Count != 0)
-            return true;
-        else
-            return false;
-    }
-
-    bool DoesModuleHaveRotationalSymmetry(Module module)
-    {
-        return DoListsContainSameData(ConvertArrToList(module.mesh.vertices),
-            ConvertArrToList(RotateModuleVertices(module.mesh.vertices, 90)));
-    }
-
-    Vector3[] RotateModuleVertices(Vector3[] vertices, float rotationAmount)
-    {
-        Vector3[] verts = new Vector3[vertices.Length];
-        Quaternion angle = Quaternion.Euler(new Vector3(0, rotationAmount, 0));
-        for (int i = 0; i < verts.Length; i++)
+        Vector3[] newVerts = new Vector3[vertices.Length];
+        Quaternion angle = Quaternion.AngleAxis(rotationAmount, Vector3.up);
+        for (int i = 0; i < vertices.Length; i++)
         {
-            verts[i] = RoundVector(angle * vertices[i]);
+            newVerts[i] = angle * vertices[i];
         }
-        return verts;
+        return RoundVector(newVerts);
     }
 
-    Vector3[] RotateModuleNormals(Vector3[] norms, float rotationAmount)
+    Vector3[] RoundVector(Vector3[] vectors)
     {
-        Vector3[] normals = new Vector3[norms.Length];
-        Quaternion angle = Quaternion.Euler(new Vector3(0, rotationAmount, 0));
-        for (int i = 0; i < normals.Length; i++)
+        Vector3[] newVec = new Vector3[vectors.Length];
+        for (int i = 0; i < vectors.Length; i++)
         {
-            normals[i] = RoundVector(angle * norms[i]);
+            newVec[i] = new Vector3(Mathf.Round(vectors[i].x * 1000) / 1000, Mathf.Round(vectors[i].y * 1000) / 1000, Mathf.Round(vectors[i].z * 1000) / 1000);
         }
-        return normals;
-    }
-
-    Vector3 RoundVector(Vector3 vector)
-    {
-        return new Vector3(Mathf.Round(vector.x * 10000) / 10000, Mathf.Round(vector.y * 10000) / 10000, Mathf.Round(vector.z * 10000) / 10000);
+        return newVec;
     }
 
     List<Vector3> MultiplyVectorList(List<Vector3> list, Vector3 vector)
@@ -337,7 +320,7 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
 
     void PrintVertexPositions(Module module)
     {
-        Debug.Log(module.moduleObject.name);
+        Debug.Log(module.moduleObject.name + " " + module.rotation);
         Debug.Log("--------------- pXFaceVertPos ---------------");
         foreach (Vector3 pos in module.pXFaceVertPos)
         {
@@ -377,7 +360,7 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
 
     void PrintNormals(Module module)
     {
-        Debug.Log(module.moduleObject.name);
+        Debug.Log(module.moduleObject.name + " " + module.rotation);
         Debug.Log("--------------- pXFaceNorms ---------------");
         foreach (Vector3 norm in module.pXFaceNorms)
         {
