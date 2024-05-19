@@ -94,7 +94,7 @@ public class CalculatePossibleAdjacentModules : MonoBehaviour
         }
 
         //PrintVertexPositions(modules[1]);
-        PrintAllAdjacentTiles(modules[25]);
+        //PrintAllAdjacentTiles(modules[25]);
         //Debug.Log(modules[2].pXFaceModules[0].moduleGameObject.name);
         //PrintModuleList();
         //PrintNormals(modules[0]);

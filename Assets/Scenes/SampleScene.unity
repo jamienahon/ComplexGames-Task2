@@ -652,8 +652,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac91c58d360a70e45bd4caffa00ae3cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  terrainWidth: 0
-  terrainHeight: 0
+  terrainLength: 20
+  terrainWidth: 20
+  terrainHeight: 20
 --- !u!1001 &1898381431
 PrefabInstance:
   m_ObjectHideFlags: 0
